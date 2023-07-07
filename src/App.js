@@ -1,19 +1,25 @@
+import { useEffect, useState } from 'react'
+import web3 from 'web3'
 
-
-import { useState } from 'react'
 function App() {
   // 基于metamask实现查看账户信息的功能 
   const [account, setAccount] = useState("");
-  const [, setIsConnected] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [blockNumber, setBlockNumber] = useState(0);
+  const [balance, setBalance] = useState("");
+  const [chainId, setChainId] = useState("");
+  const [toAddress, setToAddress] = useState("0x92f153f119CD901e499761F19EEDE974B6F8ca7F");
 
-  // 返回连接状态
-  // setIsConnected(window.ethereum && window.ethereum.isConnected());
+  const ethereum = window.ethereum;
+
+
 
   // 连接metamask钱包
-  function connect() {
-    window.ethereum
+  const connect = () => {
+    ethereum
       .request({ method: 'eth_requestAccounts' })
       .then(res => {
+        console.log("点击连接")
         setAccount(res[0])
         setIsConnected(true);
       })
@@ -31,10 +37,42 @@ function App() {
       })
   }
 
+  const getBlockNumber = () => {
+    ethereum.request({ method: 'eth_blockNumber' })
+      .then(res => {
+        setBlockNumber(res)
+      })
+      .catch(console.error);
+  }
+
+  // 查询账户余额
+  const getBalance = () => {
+    ethereum.request({ method: 'eth_getBalance', params: [account, blockNumber] })
+      .then(res => {
+        console.log('getBalance', res)
+        setBalance(web3.utils.fromWei(res, 'ether'))
+      })
+      .catch(console.error);
+  }
+
+  // 根据链ID获取币种名字
+  function getCoinNameByChainId(chainId) {
+    switch (chainId) {
+      case 1:
+        return 'ETH';
+      case 5:
+        return 'ETH（测试网络）';
+      case 56:
+        return 'BNB';
+      default:
+        return '未知币种';
+    }
+  }
+
   // 获取 metamask 账号变化后的地址
-  function getCurrentAccount(setAccount) {
+  const getCurrentAccount = (setAccount) => {
     let currentAccount = null;
-    window.ethereum.request({ method: 'eth_accounts' })
+    ethereum.request({ method: 'eth_accounts' })
       .then(handleAccountsChanged)
       .catch((err) => {
         // Some unexpected error.
@@ -46,7 +84,7 @@ function App() {
     // Note that this event is emitted on page load.
     // If the array of accounts is non-empty, you're already
     // connected.
-    window.ethereum.on('accountsChanged', handleAccountsChanged);
+    ethereum.on('accountsChanged', handleAccountsChanged);
 
     // eth_accounts always returns an array.
     function handleAccountsChanged(accounts) {
@@ -64,7 +102,48 @@ function App() {
     }
   }
 
-  getCurrentAccount(setAccount)
+  // 获取 chainId
+  const getChainId = () => {
+    ethereum.request({
+      method: "eth_chainId",
+    })
+      .then(res => {
+        console.log('getChainId', res);
+        setChainId(res)
+      })
+  }
+
+  useEffect(() => {
+    getCurrentAccount(setAccount);
+    getBlockNumber();
+    getChainId();
+    // 设置连接状态
+    setIsConnected(ethereum && ethereum.isConnected());
+  }, [])
+
+  useEffect(() => {
+    if (account) {
+      getBalance()
+    }
+  }, [account, isConnected, blockNumber])
+
+
+  // 转账
+  const transformTo = (e) => {
+    ethereum.request({
+      method: "eth_sendTransaction",
+      params: [
+        {
+          from: account, // The user's active address.
+          to: toAddress, // Required except during contract publications.
+          // todo 转账数额不对
+          value: web3.utils.toWei(0.0001, 'ether'), // Only required to send ether to the recipient from the initiating external account.
+        },
+      ],
+    })
+      .then((txHash) => console.log(txHash))
+      .catch((error) => console.error(error));
+  }
 
 
 
@@ -72,7 +151,12 @@ function App() {
     <>
       <button onClick={connect}>获取账户信息</button>
       <div>地址：{account}</div>
-      {/* <div>状态：{isConnected ? '已连接':'断开离线'}</div> */}
+      <div>余额：{Number(balance).toFixed(4)}&nbsp;{chainId && getCoinNameByChainId(web3.utils.hexToNumber(chainId))}</div>
+      <div>当前区块高度: {blockNumber && web3.utils.hexToNumber(blockNumber)}</div>
+      <div>状态：{isConnected ? <span style={{ color: 'green' }}>已连接</span> : '断开离线'}</div>
+      <br></br>
+      <button onClick={transformTo}>转账0.0001ETH到账户</button>：
+      <input style={{ width: '360px' }} type="text" defaultValue={toAddress} onChange={e => setToAddress(e.target.value)}></input>
     </>
   )
 }
