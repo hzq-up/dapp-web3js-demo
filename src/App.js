@@ -9,6 +9,7 @@ function App() {
   const [balance, setBalance] = useState("");
   const [chainId, setChainId] = useState("");
   const [toAddress, setToAddress] = useState("0x92f153f119CD901e499761F19EEDE974B6F8ca7F");
+  const [toAmount, setToAmount] = useState(0);
 
   const ethereum = window.ethereum;
 
@@ -130,6 +131,10 @@ function App() {
 
   // 转账
   const transformTo = (e) => {
+    if (toAmount <= 0) {
+      alert('请输入转账金额')
+      return;
+    }
     ethereum.request({
       method: "eth_sendTransaction",
       params: [
@@ -137,7 +142,7 @@ function App() {
           from: account, // The user's active address.
           to: toAddress, // Required except during contract publications.
           // todo 转账数额不对
-          value: web3.utils.toWei(0.0001, 'ether'), // Only required to send ether to the recipient from the initiating external account.
+          value: web3.utils.numberToHex(web3.utils.toWei(toAmount, 'ether')), // 6 进制的wei. Number of wei to send. 1
         },
       ],
     })
@@ -154,9 +159,15 @@ function App() {
       <div>余额：{Number(balance).toFixed(4)}&nbsp;{chainId && getCoinNameByChainId(web3.utils.hexToNumber(chainId))}</div>
       <div>当前区块高度: {blockNumber && web3.utils.hexToNumber(blockNumber)}</div>
       <div>状态：{isConnected ? <span style={{ color: 'green' }}>已连接</span> : '断开离线'}</div>
-      <br></br>
-      <button onClick={transformTo}>转账0.0001ETH到账户</button>：
-      <input style={{ width: '360px' }} type="text" defaultValue={toAddress} onChange={e => setToAddress(e.target.value)}></input>
+      <br />
+      ===================================================================
+      <br />
+      to：<input style={{ width: '360px' }} type="text" defaultValue={toAddress} onChange={e => setToAddress(e.target.value)}></input>
+      <br />
+      金额： <input style={{ width: '130px' }} type="number" min={0.00001} placeholder='请输入转账金额' onChange={e => setToAmount(e.target.value)}></input>ETH
+      <br />
+      <button onClick={transformTo}>转账</button>
+
     </>
   )
 }
