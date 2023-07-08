@@ -141,7 +141,6 @@ function App() {
         {
           from: account, // The user's active address.
           to: toAddress, // Required except during contract publications.
-          // todo 转账数额不对
           value: web3.utils.numberToHex(web3.utils.toWei(toAmount, 'ether')), // 6 进制的wei. Number of wei to send. 1
         },
       ],
