@@ -141,7 +141,7 @@ function App() {
         {
           from: account, // The user's active address.
           to: toAddress, // Required except during contract publications.
-          value: web3.utils.numberToHex(web3.utils.toWei(toAmount, 'ether')), // 6 进制的wei. Number of wei to send. 1
+          value: web3.utils.numberToHex(web3.utils.toWei(toAmount, 'ether')), // 16 进制的wei. Number of wei to send. 1
         },
       ],
     })
@@ -166,7 +166,6 @@ function App() {
       金额： <input style={{ width: '130px' }} type="number" min={0.00001} placeholder='请输入转账金额' onChange={e => setToAmount(e.target.value)}></input>ETH
       <br />
       <button onClick={transformTo}>转账</button>
-
     </>
   )
 }
