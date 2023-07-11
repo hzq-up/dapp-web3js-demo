@@ -163,9 +163,10 @@ function App() {
       <br />
       to：<input style={{ width: '360px' }} type="text" defaultValue={toAddress} onChange={e => setToAddress(e.target.value)}></input>
       <br />
-      金额： <input style={{ width: '130px' }} type="number" min={0.00001} placeholder='请输入转账金额' onChange={e => setToAmount(e.target.value)}></input>{getCoinNameByChainId(web3.utils.hexToNumber(chainId))}
+      金额： <input style={{ width: '130px' }} type="number" min={0.00001} placeholder='请输入转账金额' onChange={e => setToAmount(e.target.value)}></input>{chainId && getCoinNameByChainId(web3.utils.hexToNumber(chainId))}
       <br />
       <button onClick={transformTo}>转账</button>
+      {/* {chai} */}
     </>
   )
 }
